@@ -28,9 +28,9 @@ public class SearchFoodState : IState {
                 character.patrolSpeed * Time.deltaTime
             );
 
-            if (Vector3.Distance(character.transform.position, targetFood.transform.position) < 0.1f) {
+            if (Vector3.Distance(character.transform.position, targetFood.transform.position) < 0.3f) {
                 // Jedzenie zosta³o osi¹gniête
-                character.EatFood();
+                character.EatFood(targetFood);
                 //GameObject.Destroy(targetFood); // Opcjonalne usuniêcie obiektu jedzenia
                 character.ChangeState(new IdleState(character));
             }
@@ -43,7 +43,7 @@ public class SearchFoodState : IState {
                 character.patrolSpeed * Time.deltaTime
             );
 
-            if (Vector3.Distance(character.transform.position, searchTarget) < 0.1f) {
+            if (Vector3.Distance(character.transform.position, searchTarget) < 0.2f) {
                 FindFoodOrSetSearchTarget(); // ZnajdŸ jedzenie lub wybierz nowy cel
             }
         }

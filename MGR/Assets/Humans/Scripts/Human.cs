@@ -1,56 +1,104 @@
 using System.Collections;
-using System.Runtime.CompilerServices;
+using TMPro;
 using UnityEngine;
-using UnityEngine.TextCore.Text;
-using static UnityEngine.Rendering.HableCurve;
+using UnityEngine.UI;
 
 public class Human : MonoBehaviour {
     public float hunger = 100f; // Aktualny poziom g³odu
     public float thirst = 100f; // Aktualny poziom pragnienia
+    public float energy = 100f;
+    public float health = 100f;
+    public float maxHealth = 100f;
     public float maxHunger = 100f; // Maksymalny poziom g³odu
     public float maxThirst = 100f; // Maksymalny poziom pragnienia
+    public float maxEnergy = 100f;
     public float foodConsumptionRate = 0.1f; // Tempo spadku parametrów
     public float waterConsumptionRate = 1f; // Tempo spadku parametrów
+    public float energyConsumption = 0.1f; // Tempo spadku parametrów
     public float patrolSpeed = 2f; // Prêdkoœæ poruszania siê podczas patrolowania
     public float range = 0.1f; // Zasiêg wykrywania jedzenia i wody
     public float movingRange = 5f;
+    public bool predator = false;
+    public GENDER gender = GENDER.male;
+    public TMP_Text stausText;
 
+    [SerializeField] private GameObject meat;
+    [SerializeField] private Image healthBar;
+    [SerializeField] private Genome genome;
+    [SerializeField] private SpriteRenderer sprite;
+    [SerializeField] private Color[] preyGenderColor;
+    [SerializeField] private Color[] predatorGenderColor;
     public Color gizmoColor = Color.green;
-    public int segments = 50; // Liczba segmentów do narysowania okrêgu (im wiêcej, tym g³adszy)
-
-
+    private int segments = 50; // Liczba segmentów do narysowania okrêgu (im wiêcej, tym g³adszy)
     private IState currentState;
 
     private void Start() {
         ChangeState(new PatrolState(this)); // Rozpocznij w stanie patrolowania
+        gender = (GENDER)Random.Range(0, 2);
+        SetGenderColor();
     }
 
     private void Update() {
         hunger -= foodConsumptionRate * Time.deltaTime;
         thirst -= waterConsumptionRate * Time.deltaTime;
+        energy -= waterConsumptionRate * Time.deltaTime;
 
-        if (hunger <= 0 || thirst <= 0) {
-            Debug.Log("Character has died.");
-            //Destroy(gameObject); // Postaæ umiera, jeœli g³ód lub pragnienie wynosi 0
-            return;
-        }
+        CheckForHealthLose();
+        CheckForDeath();
+
 
         currentState?.Execute(); // Wykonaj bie¿¹cy stan
     }
 
+    private void CheckForHealthLose(){
+        if (hunger <= 0) {
+            LoseHp( 1 * Time.deltaTime);
+        }
+
+        if (thirst <= 0) {
+            LoseHp(5 * Time.deltaTime);
+        }
+    }
+
+    public void LoseHp(float hpToLose) {
+        health -= hpToLose;
+        healthBar.fillAmount = health / 100;
+    }
+
+    private void CheckForDeath() {
+        if (health <= 0) {
+            Debug.Log("Character has died.");
+            Die();
+            Destroy(gameObject);
+            return;
+        }
+    }
+
     public void ChangeState(IState newState) {
+        stausText.text = newState.ToString();
         currentState?.Exit(); // WyjdŸ ze starego stanu
         currentState = newState;
         currentState.Enter(); // WejdŸ w nowy stan
     }
 
-    public GameObject FindClosestObjectWithTag(string tag) {
+    public bool CanIEatIt(GameObject targetFood) {
+        Human edible;
+        targetFood.TryGetComponent<Human>(out edible);
+
+        if (edible != null && predator) {
+            return true;
+        }
+        return false;
+        
+    }
+
+    virtual public GameObject FindClosestObjectWithTag(string tag) {
         Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, range);
         GameObject closest = null;
         float closestDistance = Mathf.Infinity;
 
         foreach (Collider2D collider in colliders) {
-            if (collider.CompareTag(tag)) {
+            if (collider.CompareTag(tag) && CanIEatIt(collider.gameObject)) {
                 float distance = Vector3.Distance(transform.position, collider.transform.position);
                 if (distance < closestDistance) {
                     closestDistance = distance;
@@ -61,8 +109,23 @@ public class Human : MonoBehaviour {
         return closest;
     }
 
+    public void SetGenderColor() {
+
+        if (predator) {
+            sprite.color = predatorGenderColor[(int)gender];
+        }
+        else {
+            sprite.color = preyGenderColor[(int)gender];
+        }
+    }
+
     public bool NeedsFood() => hunger / maxHunger < 0.5f; // Czy postaæ jest bardzo g³odna
+
+    public bool ExtreameStarving() => hunger / maxHunger < 0.1f; // Krytyczny poziom godu
     public bool NeedsWater() => thirst / maxThirst < 0.5f; // Czy postaæ jest bardzo spragniona
+
+    public bool ExtreameThirst() => thirst / maxThirst < 0.1f; // Krytyczny poziom pragnienia
+
     public bool IsWithinRange(Vector3 target) => Vector3.Distance(transform.position, target) <= range; // Czy obiekt jest w zasiêgu
 
     // Przyk³adowa metoda do symulacji znalezienia wody
@@ -72,9 +135,13 @@ public class Human : MonoBehaviour {
     }
 
     // Przyk³adowa metoda do symulacji znalezienia jedzenia
-    public void EatFood() {
+    public void EatFood(GameObject food) {
         hunger = maxHunger;
         Debug.Log("Character ate food.");
+
+        if (predator) {
+            Destroy(food);
+        }
     }
 
     public Vector3 GenerateRandomPointWithinBounds() {
@@ -121,6 +188,10 @@ public class Human : MonoBehaviour {
 
             previousPoint = newPoint; // Zaktualizuj poprzedni punkt
         }
+    }
+
+    public void Die() {
+        Instantiate(meat, transform.position, Quaternion.identity);
     }
 }
 

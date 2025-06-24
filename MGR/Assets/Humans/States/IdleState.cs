@@ -11,7 +11,7 @@ public class IdleState : IState {
 
     public void Enter() {
         Debug.Log("Entering Idle State");
-    }
+    }   
 
     public void Execute() {
         if (character.NeedsFood()) {
