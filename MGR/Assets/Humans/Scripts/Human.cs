@@ -98,7 +98,8 @@ public class Human : MonoBehaviour {
         float closestDistance = Mathf.Infinity;
 
         foreach (Collider2D collider in colliders) {
-            if (collider.CompareTag(tag) && CanIEatIt(collider.gameObject)) {
+
+            if (collider.CompareTag(tag)) {
                 float distance = Vector3.Distance(transform.position, collider.transform.position);
                 if (distance < closestDistance) {
                     closestDistance = distance;
@@ -130,14 +131,12 @@ public class Human : MonoBehaviour {
 
     // Przyk³adowa metoda do symulacji znalezienia wody
     public void DrinkWater() {
-        thirst = maxThirst;
-        Debug.Log("Character drank water.");
+        thirst = maxThirst; 
     }
 
     // Przyk³adowa metoda do symulacji znalezienia jedzenia
     public void EatFood(GameObject food) {
         hunger = maxHunger;
-        Debug.Log("Character ate food.");
 
         if (predator) {
             Destroy(food);

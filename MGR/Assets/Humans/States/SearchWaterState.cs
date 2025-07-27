@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class SearchWaterState : IState {
@@ -10,7 +11,6 @@ public class SearchWaterState : IState {
     }
 
     public void Enter() {
-        Debug.Log("Entering Search Water State");
         FindWaterOrSetSearchTarget();
     }
 
@@ -20,8 +20,10 @@ public class SearchWaterState : IState {
             return;
         }
 
+        
+
         if (targetWater != null) {
-            // Podejœcie do wody
+
             character.transform.position = Vector3.MoveTowards(
                 character.transform.position,
                 targetWater.transform.position,
@@ -36,21 +38,27 @@ public class SearchWaterState : IState {
             }
         }
         else {
-            // Kontynuuj szukanie w losowym punkcie
-            character.transform.position = Vector3.MoveTowards(
+
+            targetWater = character.FindClosestObjectWithTag("DrinkingWater");
+
+            if (targetWater != null) return;         
+
+
+            if (Vector3.Distance(character.transform.position, searchTarget) < 0.1f) {
+                searchTarget = character.GenerateRandomPointWithinBounds();
+            }
+            else {
+                character.transform.position = Vector3.MoveTowards(
                 character.transform.position,
                 searchTarget,
                 character.patrolSpeed * Time.deltaTime
-            );
-
-            if (Vector3.Distance(character.transform.position, searchTarget) < 0.1f) {
-                FindWaterOrSetSearchTarget(); // ZnajdŸ wodê lub wybierz nowy cel
+                );
             }
         }
     }
 
     public void Exit() {
-        Debug.Log("Exiting Search Water State");
+        //Debug.Log("Exiting Search Water State");
     }
 
     private void FindWaterOrSetSearchTarget() {

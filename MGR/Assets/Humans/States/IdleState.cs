@@ -10,7 +10,7 @@ public class IdleState : IState {
     }
 
     public void Enter() {
-        Debug.Log("Entering Idle State");
+       // Debug.Log("Entering Idle State");
     }   
 
     public void Execute() {
@@ -26,6 +26,6 @@ public class IdleState : IState {
     }
 
     public void Exit() {
-        Debug.Log("Exiting Idle State");
+       // Debug.Log("Exiting Idle State");
     }
 }

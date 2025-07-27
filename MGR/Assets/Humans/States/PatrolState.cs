@@ -12,7 +12,6 @@ public class PatrolState : IState {
     }
 
     public void Enter() {
-        Debug.Log("Entering Patrol State");
         SetNewPatrolTarget();
     }
 
@@ -36,7 +35,7 @@ public class PatrolState : IState {
     }
 
     public void Exit() {
-        Debug.Log("Exiting Patrol State");
+        //Debug.Log("Exiting Patrol State");
     }
 
     private void SetNewPatrolTarget() {
