@@ -264,7 +264,7 @@ GameObject:
   - component: {fileID: 7872294505164122901}
   m_Layer: 0
   m_Name: Tree
-  m_TagString: EdibleFood
+  m_TagString: PreyEdibleFood
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

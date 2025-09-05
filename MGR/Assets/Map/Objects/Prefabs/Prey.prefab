@@ -566,8 +566,8 @@ MonoBehaviour:
   maxHunger: 100
   maxThirst: 100
   maxEnergy: 100
-  foodConsumptionRate: 0.1
-  waterConsumptionRate: 1
+  foodConsumptionRate: 2
+  waterConsumptionRate: 3
   energyConsumption: 0.1
   patrolSpeed: 2
   range: 3
@@ -586,6 +586,8 @@ MonoBehaviour:
   - {r: 0.4245283, g: 0.02830189, b: 0, a: 1}
   - {r: 1, g: 0.06666667, b: 0, a: 1}
   gizmoColor: {r: 0, g: 1, b: 0, a: 1}
+  reproduceCooldownTime: 10
+  reproduceCooldownTimer: 0
 --- !u!114 &4774308239339497985
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -653,8 +655,8 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6512584918613547554}
-  m_BodyType: 0
-  m_Simulated: 0
+  m_BodyType: 2
+  m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
   m_Mass: 1
@@ -671,4 +673,4 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 0
+  m_Constraints: 7

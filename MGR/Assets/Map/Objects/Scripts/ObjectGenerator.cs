@@ -4,12 +4,19 @@ using UnityEngine;
 
 public class ObjectGenerator : MonoBehaviour
 {
+    public static ObjectGenerator Instance { get; private set; }
+
+
     public int gridWidth = 14; 
     public int gridHeight = 8; 
     public float cellSize = 1.0f; 
     public GameObject[] prefabsToSpawn; 
     public int[] numberOfObjects;
     public Transform parent;
+
+    private void Awake() {
+        Instance = this;
+    }
 
     private void Start() {
         if (prefabsToSpawn.Length != numberOfObjects.Length) {
@@ -51,6 +58,24 @@ public class ObjectGenerator : MonoBehaviour
             if (parent != null) {
                 spawnedObject.transform.SetParent(parent);
             }
+        }
+    }
+
+    public void RespawnObjectWithDelay(int prefabIndex, Vector3 position) {
+        StartCoroutine(RespawnCoroutine(prefabIndex, position));
+    }
+
+    private IEnumerator RespawnCoroutine(int prefabIndex, Vector3 position) {
+        float delay = Random.Range(10f, 30f);
+        yield return new WaitForSeconds(delay);
+
+        if (prefabIndex >= 0 && prefabIndex < prefabsToSpawn.Length) {
+            GameObject spawnedObject = Instantiate(prefabsToSpawn[prefabIndex], position, Quaternion.identity);
+            Debug.Log("tree spawned");
+            if (parent != null) spawnedObject.transform.SetParent(parent);
+
+            var logger = GameObject.FindObjectOfType<SimulationStatsLogger>();
+            if (logger != null) logger.OnTreeSpawned();
         }
     }
 }

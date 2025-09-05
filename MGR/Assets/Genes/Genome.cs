@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Genome : MonoBehaviour {
     public float[] genes;
-    public int geneLength = 10;
+    public int geneLength = 6;
 
     //[tê¿yzna, popêd, zwinnoœæ , atrakcyjnoœæ, percepcja , si³a]
     // tê¿yzna wp³ywa na move speed, i zmniejszenie wzrostu g³odu i pragnienia
@@ -13,8 +13,7 @@ public class Genome : MonoBehaviour {
     // szansa na akceptacjê samca przez samicê
     // percepcja wp³ywa na zasiêg wykrywania
 
-
-    private void Start() {
+    private void Awake() {
         InitializeRandom();
     }
 

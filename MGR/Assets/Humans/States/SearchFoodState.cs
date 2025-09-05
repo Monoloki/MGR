@@ -31,7 +31,14 @@ public class SearchFoodState : IState {
             if (Vector3.Distance(character.transform.position, targetFood.transform.position) < 0.3f) {
                 // Jedzenie zosta³o osi¹gniête
                 character.EatFood(targetFood);
-                //GameObject.Destroy(targetFood); // Opcjonalne usuniêcie obiektu jedzenia
+                if (ObjectGenerator.Instance != null) {
+                    ObjectGenerator.Instance.RespawnObjectWithDelay(0, targetFood.transform.position);
+                }
+                // Dodaj wywo³anie OnTreeEaten
+                var logger = GameObject.FindObjectOfType<SimulationStatsLogger>();
+                if (logger != null) logger.OnTreeEaten();
+
+                Debug.Log("Tree eaten");
                 character.ChangeState(new IdleState(character));
             }
         }
@@ -54,7 +61,7 @@ public class SearchFoodState : IState {
     }
 
     private void FindFoodOrSetSearchTarget() {
-        targetFood = character.FindClosestObjectWithTag("EdibleFood");
+        targetFood = character.FindClosestObjectWithTag("PreyEdibleFood");
 
         if (targetFood == null) {
             // Jeœli nie znaleziono jedzenia, ustaw nowy losowy punkt poszukiwañ

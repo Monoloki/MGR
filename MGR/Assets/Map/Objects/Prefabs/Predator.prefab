@@ -201,7 +201,7 @@ GameObject:
   - component: {fileID: 8510118975184420271}
   m_Layer: 0
   m_Name: Predator
-  m_TagString: EdibleFood
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -244,8 +244,8 @@ MonoBehaviour:
   maxHunger: 100
   maxThirst: 100
   maxEnergy: 100
-  foodConsumptionRate: 0.1
-  waterConsumptionRate: 1
+  foodConsumptionRate: 2
+  waterConsumptionRate: 3
   energyConsumption: 0.1
   patrolSpeed: 2
   range: 3
@@ -264,6 +264,8 @@ MonoBehaviour:
   - {r: 0.4245283, g: 0.02830189, b: 0, a: 1}
   - {r: 1, g: 0.06666667, b: 0, a: 1}
   gizmoColor: {r: 0, g: 1, b: 0, a: 1}
+  reproduceCooldownTime: 10
+  reproduceCooldownTimer: 0
 --- !u!114 &2985630231563419965
 MonoBehaviour:
   m_ObjectHideFlags: 0

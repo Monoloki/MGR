@@ -15,7 +15,12 @@ public class IdleState : IState {
 
     public void Execute() {
         if (character.NeedsFood()) {
-            character.ChangeState(new SearchFoodState(character));
+            if (character.predator) {
+                character.ChangeState(new PredatorFoodState(character));
+            }
+            else {
+                character.ChangeState(new SearchFoodState(character));
+            }
         }
         else if (character.NeedsWater()) {
             character.ChangeState(new SearchWaterState(character));

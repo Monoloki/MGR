@@ -1,9 +1,9 @@
-using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class Human : MonoBehaviour {
+    public static event System.Action OnDeath;
     public float hunger = 100f; // Aktualny poziom g³odu
     public float thirst = 100f; // Aktualny poziom pragnienia
     public float energy = 100f;
@@ -12,42 +12,122 @@ public class Human : MonoBehaviour {
     public float maxHunger = 100f; // Maksymalny poziom g³odu
     public float maxThirst = 100f; // Maksymalny poziom pragnienia
     public float maxEnergy = 100f;
-    public float foodConsumptionRate = 0.1f; // Tempo spadku parametrów
-    public float waterConsumptionRate = 1f; // Tempo spadku parametrów
-    public float energyConsumption = 0.1f; // Tempo spadku parametrów
-    public float patrolSpeed = 2f; // Prêdkoœæ poruszania siê podczas patrolowania
-    public float range = 0.1f; // Zasiêg wykrywania jedzenia i wody
-    public float movingRange = 5f;
+    public float foodConsumptionRate = 1.2f; // Tempo spadku parametrów
+    public float waterConsumptionRate = 2f; // Tempo spadku parametrów
+    public float energyConsumption = 0.2f; // Tempo spadku parametrów
+    public float patrolSpeed = 4f; // Prêdkoœæ poruszania siê podczas patrolowania
+    public float range = 3f; // Zasiêg wykrywania jedzenia i wody
+    public float movingRange = 10f;
     public bool predator = false;
     public GENDER gender = GENDER.male;
     public TMP_Text stausText;
 
     [SerializeField] private GameObject meat;
     [SerializeField] private Image healthBar;
-    [SerializeField] private Genome genome;
+    public Genome genome;
     [SerializeField] private SpriteRenderer sprite;
     [SerializeField] private Color[] preyGenderColor;
     [SerializeField] private Color[] predatorGenderColor;
     public Color gizmoColor = Color.green;
     private int segments = 50; // Liczba segmentów do narysowania okrêgu (im wiêcej, tym g³adszy)
-    private IState currentState;
+    public IState currentState;
+    public float reproduceCooldownTime = 5f; // czas oczekiwania po rozmna¿aniu
+    public float reproduceCooldownTimer;
+
+
+    public void ApplyGenome() {
+        if (genome == null || genome.genes == null || genome.genes.Length < 6)
+            return;
+
+        // Tê¿yzna (0): maxHealth, foodConsumptionRate, waterConsumptionRate
+        float tezyzna = genome.genes[0];
+        maxHealth = Mathf.Lerp(80f, 200f, tezyzna); // np. 80-200
+        health = maxHealth;
+        foodConsumptionRate = Mathf.Lerp(2.5f, 0.8f, tezyzna); // im wiêksza tê¿yzna, tym wolniej spada g³ód
+        waterConsumptionRate = Mathf.Lerp(3.5f, 1.0f, tezyzna); // im wiêksza tê¿yzna, tym wolniej spada pragnienie
+
+        // Popêd (1): reproduceCooldownTimer
+        float poped = genome.genes[1];
+
+        if (gender == GENDER.male)
+            reproduceCooldownTime = Mathf.Lerp(60f, 30f, poped); // np. 60-10 sekund
+        else
+            reproduceCooldownTime = Mathf.Lerp(90f, 50f, poped); // np. 60-10 sekund
+
+        // Zwinnoœæ (2): patrolSpeed
+        float zwin = genome.genes[2];
+        patrolSpeed = Mathf.Lerp(1f, 4f, zwin);
+
+        // Percepcja (4): range
+        float percepcja = genome.genes[4];
+        range = Mathf.Lerp(0.5f, 3f, percepcja);
+    }
 
     private void Start() {
         ChangeState(new PatrolState(this)); // Rozpocznij w stanie patrolowania
         gender = (GENDER)Random.Range(0, 2);
         SetGenderColor();
+
+        ApplyGenome();
+    }
+
+    public void ForceReproduceWith(Human partner) {
+        if (!(currentState is ReproduceState)) {
+            ChangeState(new ReproduceState(this, partner));
+        }
     }
 
     private void Update() {
         hunger -= foodConsumptionRate * Time.deltaTime;
         thirst -= waterConsumptionRate * Time.deltaTime;
-        energy -= waterConsumptionRate * Time.deltaTime;
-
         CheckForHealthLose();
         CheckForDeath();
 
+        if (reproduceCooldownTimer > 0f)
+            reproduceCooldownTimer -= Time.deltaTime;
 
-        currentState?.Execute(); // Wykonaj bie¿¹cy stan
+        if (currentState is PatrolState && IsReadyToReproduce()) {
+            Human partner = FindReproducePartner();
+            if (partner != null) {
+                ChangeState(new ReproduceState(this, partner));
+                partner.ForceReproduceWith(this);
+            }
+        }
+
+        currentState?.Execute();
+    }
+
+    private Human FindReproducePartner() {
+        Physics2D.queriesHitTriggers = true;
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, range);
+        foreach (Collider2D col in colliders) {
+            Human other = col.GetComponent<Human>();
+            if (other != null &&
+                other != this &&
+                other.predator == this.predator &&
+                other.gender != this.gender &&
+                other.IsReadyToReproduce()) {
+                return other;
+            }
+        }
+        return null;
+    }
+
+    private bool CanReproduce() {
+        Physics2D.queriesHitTriggers = true;
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, range);
+        foreach (Collider2D col in colliders) {
+            Human other = col.GetComponent<Human>();
+            if (other != null &&
+                other != this &&
+                other.predator == this.predator &&
+                other.gender != this.gender &&
+                other.IsReadyToReproduce() &&
+                this.IsReadyToReproduce()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void CheckForHealthLose(){
@@ -69,7 +149,6 @@ public class Human : MonoBehaviour {
         if (health <= 0) {
             Debug.Log("Character has died.");
             Die();
-            Destroy(gameObject);
             return;
         }
     }
@@ -93,18 +172,19 @@ public class Human : MonoBehaviour {
     }
 
     virtual public GameObject FindClosestObjectWithTag(string tag) {
-        Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, range);
+        GameObject[] objects = GameObject.FindGameObjectsWithTag(tag);
         GameObject closest = null;
-        float closestDistance = Mathf.Infinity;
+        float minDist = Mathf.Infinity;
+        Vector3 currentPos = transform.position;
 
-        foreach (Collider2D collider in colliders) {
+        foreach (GameObject obj in objects) {
+            if (obj == this.gameObject) // Pomijaj samego siebie
+                continue;
 
-            if (collider.CompareTag(tag)) {
-                float distance = Vector3.Distance(transform.position, collider.transform.position);
-                if (distance < closestDistance) {
-                    closestDistance = distance;
-                    closest = collider.gameObject;
-                }
+            float dist = Vector3.Distance(obj.transform.position, currentPos);
+            if (dist < minDist) {
+                closest = obj;
+                minDist = dist;
             }
         }
         return closest;
@@ -138,22 +218,37 @@ public class Human : MonoBehaviour {
     public void EatFood(GameObject food) {
         hunger = maxHunger;
 
-        if (predator) {
+        if (food.tag == "EdibleFood") {
+            food.TryGetComponent<Human> (out Human humanfood);
+            if (humanfood != null) {
+                humanfood.Die();
+            }
+            else {
+                Destroy(food);
+            }
+        }
+        else {
             Destroy(food);
         }
     }
 
     public Vector3 GenerateRandomPointWithinBounds() {
         Bounds mapBoundaries;
-        // ZnajdŸ obiekt z tagiem Map i pobierz komponent klasy Map
         GameObject mapObject = GameObject.FindGameObjectWithTag("Map");
         if (mapObject != null) {
             Map map = mapObject.GetComponent<Map>();
             if (map != null) {
-                mapBoundaries = map.boundries.bounds; // Pobierz granice z klasy Map
-                float randomX = Random.Range(mapBoundaries.min.x, mapBoundaries.max.x);
-                float randomY = Random.Range(mapBoundaries.min.y, mapBoundaries.max.y);
-                return new Vector3(randomX, randomY, transform.position.z);
+                mapBoundaries = map.boundries.bounds;
+                Vector3 randomPoint;
+                int safety = 0;
+                do {
+                    float randomX = Random.Range(mapBoundaries.min.x, mapBoundaries.max.x);
+                    float randomY = Random.Range(mapBoundaries.min.y, mapBoundaries.max.y);
+                    randomPoint = new Vector3(randomX, randomY, transform.position.z);
+                    safety++;
+                    if (safety > 20) break; // zabezpieczenie przed nieskoñczon¹ pêtl¹
+                } while (Vector3.Distance(transform.position, randomPoint) < 1f);
+                return randomPoint;
             }
             else {
                 Debug.LogError("No 'Map' component found on the object with tag 'Map'.");
@@ -162,8 +257,7 @@ public class Human : MonoBehaviour {
         else {
             Debug.LogError("No object with tag 'Map' found in the scene!");
         }
-        return new Vector3(0,0,0);
-        
+        return new Vector3(0, 0, 0);
     }
 
     private void OnDrawGizmos() {
@@ -189,8 +283,15 @@ public class Human : MonoBehaviour {
         }
     }
 
+    public bool IsReadyToReproduce() {
+        return reproduceCooldownTimer <= 0f && (currentState is IdleState || currentState is PatrolState);
+    }
+
     public void Die() {
         Instantiate(meat, transform.position, Quaternion.identity);
+        OnDeath?.Invoke();
+
+        Destroy(gameObject);
     }
 }
 

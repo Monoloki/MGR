@@ -7,6 +7,7 @@ TagManager:
   - EdibleFood
   - DrinkingWater
   - Map
+  - PreyEdibleFood
   layers:
   - Default
   - TransparentFX
