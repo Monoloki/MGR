@@ -15,14 +15,21 @@ public class SimulationStatsLogger : MonoBehaviour
 
 
     void Start() {
-        filePath = Path.Combine(Application.dataPath, "simulation_stats.csv");
+        string basePath = Path.Combine(Application.dataPath, "simulation_stats");
+        string extension = ".csv";
+        int index = 0;
+        filePath = basePath + extension;
+        while (File.Exists(filePath)) {
+            index++;
+            filePath = basePath + $"_{index}" + extension;
+        }
         Debug.Log(filePath);
-        File.WriteAllText(filePath, "Time,Herbivore_Male,Herbivore_Female,Predator_Male,Predator_Female,Deaths,Births,PredatorKills,TreesEaten,TreesSpawned," +
+        File.WriteAllText(filePath, "Time,Herbivore_Male,Herbivore_Female,Predator_Male,Predator_Female,Deaths,Births,PredatorKills,TreesEaten,TreesSpawned,MaxGeneration," +
             "HerbivoreMale_Tezyzna,HerbivoreMale_Poped,HerbivoreMale_Zwin,HerbivoreMale_Atrak,HerbivoreMale_Perc,HerbivoreMale_Sila," +
             "HerbivoreFemale_Tezyzna,HerbivoreFemale_Poped,HerbivoreFemale_Zwin,HerbivoreFemale_Atrak,HerbivoreFemale_Perc,HerbivoreFemale_Sila," +
             "PredatorMale_Tezyzna,PredatorMale_Poped,PredatorMale_Zwin,PredatorMale_Atrak,PredatorMale_Perc,PredatorMale_Sila," +
             "PredatorFemale_Tezyzna,PredatorFemale_Poped,PredatorFemale_Zwin,PredatorFemale_Atrak,PredatorFemale_Perc,PredatorFemale_Sila\n");
-        File.WriteAllText(filePath, "Time,Time2,Herbivore_Male,Herbivore_Female,Predator_Male,Predator_Female,Deaths,Births,PredatorKills\n");
+
         Human.OnDeath += OnHumanDeath;
         ReproduceState.OnBirth += OnHumanBirth;
         PredatorFoodState.OnPredatorKill += OnPredatorKill;
@@ -52,11 +59,16 @@ public class SimulationStatsLogger : MonoBehaviour
         float[] herbivoreFemaleGenes = new float[6];
         float[] predatorMaleGenes = new float[6];
         float[] predatorFemaleGenes = new float[6];
+        int maxGeneration = 0;
 
         Human[] humans = FindObjectsOfType<Human>();
         foreach (var h in humans) {
             if (h.genome == null || h.genome.genes == null || h.genome.genes.Length < 6)
                 continue;
+
+            // Liczenie maksymalnego pokolenia
+            if (h.generation > maxGeneration)
+                maxGeneration = h.generation;
 
             if (!h.predator && h.gender == GENDER.male) {
                 herbivoreMale++;
@@ -84,7 +96,7 @@ public class SimulationStatsLogger : MonoBehaviour
             if (predatorFemale > 0) predatorFemaleGenes[i] /= predatorFemale;
         }
 
-        string line = $"{Time.time:F2},{herbivoreMale},{herbivoreFemale},{predatorMale},{predatorFemale},{deaths},{births},{predatorKills},{treesEaten},{treesSpawned}";
+        string line = $"{Time.time:F2},{herbivoreMale},{herbivoreFemale},{predatorMale},{predatorFemale},{deaths},{births},{predatorKills},{treesEaten},{treesSpawned},{maxGeneration}";
 
         // Dodaj œrednie geny do linii
         for (int i = 0; i < 6; i++) line += $",{herbivoreMaleGenes[i]:F3}";

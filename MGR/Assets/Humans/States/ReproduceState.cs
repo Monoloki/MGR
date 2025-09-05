@@ -73,6 +73,7 @@ public class ReproduceState : IState {
         childHuman.SetGenderColor();
         childHuman.reproduceCooldownTimer = childHuman.reproduceCooldownTime; // Dziecko nie mo¿e siê rozmna¿aæ na starcie
         childHuman.ApplyGenome();
+        childHuman.generation = Mathf.Max(parent1.generation, parent2.generation) + 1;
 
         OnBirth?.Invoke();
     }

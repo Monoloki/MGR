@@ -21,6 +21,7 @@ public class Human : MonoBehaviour {
     public bool predator = false;
     public GENDER gender = GENDER.male;
     public TMP_Text stausText;
+    public int generation = 0;
 
     [SerializeField] private GameObject meat;
     [SerializeField] private Image healthBar;
