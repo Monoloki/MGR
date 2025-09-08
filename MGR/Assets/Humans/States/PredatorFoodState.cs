@@ -15,7 +15,7 @@ public class PredatorFoodState : IState {
         this.character = character;
         // Si³a (5): attackDamage
         if (character.genome != null && character.genome.genes != null && character.genome.genes.Length >= 6)
-            attackDamage = Mathf.Lerp(1f, 15f, character.genome.genes[5]);
+            attackDamage = Mathf.Lerp(3f, 10f, character.genome.genes[5]);
         else
             attackDamage = 20f; // domyœlna wartoœæ
     }
@@ -31,9 +31,24 @@ public class PredatorFoodState : IState {
             return;
         }
 
-        FindTarget(); // Na bie¿¹co szukaj nowych celów
+        FindTarget();
 
-        if (targetPrey != null) {
+        if (targetFood != null) {
+            // PodejdŸ do jedzenia
+            character.transform.position = Vector3.MoveTowards(
+                character.transform.position,
+                targetFood.transform.position,
+                character.patrolSpeed * Time.deltaTime
+            );
+
+            if (Vector3.Distance(character.transform.position, targetFood.transform.position) < 0.1f) {
+                if (character == null) return;
+                character.EatFood(targetFood);
+                character.ChangeState(new IdleState(character));
+            }
+ 
+        }
+        else if (targetPrey != null) {
             // PodejdŸ do ofiary
             character.transform.position = Vector3.MoveTowards(
                 character.transform.position,
@@ -41,7 +56,7 @@ public class PredatorFoodState : IState {
                 character.patrolSpeed * Time.deltaTime
             );
 
-            if (Vector3.Distance(character.transform.position, targetPrey.transform.position) < 0.2f) {
+            if (Vector3.Distance(character.transform.position, targetPrey.transform.position) < 1f) {
                 // Atakuj w interwa³ach
                 attackTimer += Time.deltaTime;
                 if (attackTimer >= attackInterval) {
@@ -56,32 +71,19 @@ public class PredatorFoodState : IState {
                 }
             }
         }
-        else if (targetFood != null) {
-            // PodejdŸ do jedzenia
-            character.transform.position = Vector3.MoveTowards(
-                character.transform.position,
-                targetFood.transform.position,
-                character.patrolSpeed * Time.deltaTime
-            );
-
-            if (Vector3.Distance(character.transform.position, targetFood.transform.position) < 0.1f) {
-                if (character == null) return;
-                character.EatFood(targetFood);
-                character.ChangeState(new IdleState(character));
-            }
-        }
         else {
-            // Kontynuuj szukanie w losowym punkcie
             character.transform.position = Vector3.MoveTowards(
-                character.transform.position,
-                searchTarget,
-                character.patrolSpeed * Time.deltaTime
-            );
+            character.transform.position,
+            searchTarget,
+            character.patrolSpeed * Time.deltaTime
+        );
 
-            if (Vector3.Distance(character.transform.position, searchTarget) < 0.2f) {
-                FindTarget();
+            // Jeœli osi¹gniêto cel, wybierz nowy punkt
+            if (Vector3.Distance(character.transform.position, searchTarget) < 0.1f) {
+                searchTarget = character.GenerateRandomPointWithinBounds();
             }
         }
+ 
     }
 
     public void Exit() {
@@ -96,11 +98,8 @@ public class PredatorFoodState : IState {
         targetPrey = FindClosestHerbivore();
 
         // Priorytet: najpierw atakuj roœlino¿ercê, potem jedzenie
-        if (targetPrey != null) {
-            targetFood = null;
-        }
-        else if (targetFood == null) {
-            searchTarget = character.GenerateRandomPointWithinBounds();
+        if (targetFood != null) {
+            targetPrey = null;
         }
     }
 

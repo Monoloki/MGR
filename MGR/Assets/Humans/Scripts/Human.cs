@@ -1,3 +1,4 @@
+
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -51,9 +52,9 @@ public class Human : MonoBehaviour {
         float poped = genome.genes[1];
 
         if (gender == GENDER.male)
-            reproduceCooldownTime = Mathf.Lerp(60f, 30f, poped); // np. 60-10 sekund
+            reproduceCooldownTimer = Mathf.Lerp(60f, 30f, poped); // np. 60-10 sekund
         else
-            reproduceCooldownTime = Mathf.Lerp(90f, 50f, poped); // np. 60-10 sekund
+            reproduceCooldownTimer = Mathf.Lerp(90f, 50f, poped); // np. 60-10 sekund
 
         // Zwinnoœæ (2): patrolSpeed
         float zwin = genome.genes[2];
@@ -179,7 +180,7 @@ public class Human : MonoBehaviour {
         Vector3 currentPos = transform.position;
 
         foreach (GameObject obj in objects) {
-            if (obj == this.gameObject) // Pomijaj samego siebie
+            if (obj == this.gameObject || obj.TryGetComponent<Human>(out Human human)) // Pomijaj samego siebie
                 continue;
 
             float dist = Vector3.Distance(obj.transform.position, currentPos);
