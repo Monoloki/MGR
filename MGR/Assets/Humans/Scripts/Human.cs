@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class Human : MonoBehaviour {
-    public static event System.Action OnDeath;
+    public static event System.Action<Human> OnDeath;
     public float hunger = 100f; // Aktualny poziom g³odu
     public float thirst = 100f; // Aktualny poziom pragnienia
     public float energy = 100f;
@@ -45,8 +45,8 @@ public class Human : MonoBehaviour {
         float tezyzna = genome.genes[0];
         maxHealth = Mathf.Lerp(80f, 200f, tezyzna); // np. 80-200
         health = maxHealth;
-        foodConsumptionRate = Mathf.Lerp(2.5f, 0.8f, tezyzna); // im wiêksza tê¿yzna, tym wolniej spada g³ód
-        waterConsumptionRate = Mathf.Lerp(3.5f, 1.0f, tezyzna); // im wiêksza tê¿yzna, tym wolniej spada pragnienie
+        foodConsumptionRate = Mathf.Lerp( 0.8f, 2.5f, tezyzna); // im wiêksza tê¿yzna, tym szybciej spada g³ód
+        waterConsumptionRate = Mathf.Lerp( 1.0f, 3.5f, tezyzna); // im wiêksza tê¿yzna, tym szybciej spada pragnienie
 
         // Popêd (1): reproduceCooldownTimer
         float poped = genome.genes[1];
@@ -291,7 +291,7 @@ public class Human : MonoBehaviour {
 
     public void Die() {
         Instantiate(meat, transform.position, Quaternion.identity);
-        OnDeath?.Invoke();
+        OnDeath?.Invoke(this);
 
         Destroy(gameObject);
     }

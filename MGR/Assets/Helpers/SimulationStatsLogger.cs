@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using UnityEngine;
 
@@ -12,6 +13,8 @@ public class SimulationStatsLogger : MonoBehaviour
     private string filePath;
     private int treesEaten = 0;
     private int treesSpawned = 0;
+    private int herbivoreDeaths = 0;
+    private int predatorDeaths = 0;
 
 
     void Start() {
@@ -24,11 +27,11 @@ public class SimulationStatsLogger : MonoBehaviour
             filePath = basePath + $"_{index}" + extension;
         }
         Debug.Log(filePath);
-        File.WriteAllText(filePath, "Time,Herbivore_Male,Herbivore_Female,Predator_Male,Predator_Female,Deaths,Births,PredatorKills,TreesEaten,TreesSpawned,MaxGeneration," +
-            "HerbivoreMale_Tezyzna,HerbivoreMale_Poped,HerbivoreMale_Zwin,HerbivoreMale_Atrak,HerbivoreMale_Perc,HerbivoreMale_Sila," +
-            "HerbivoreFemale_Tezyzna,HerbivoreFemale_Poped,HerbivoreFemale_Zwin,HerbivoreFemale_Atrak,HerbivoreFemale_Perc,HerbivoreFemale_Sila," +
-            "PredatorMale_Tezyzna,PredatorMale_Poped,PredatorMale_Zwin,PredatorMale_Atrak,PredatorMale_Perc,PredatorMale_Sila," +
-            "PredatorFemale_Tezyzna,PredatorFemale_Poped,PredatorFemale_Zwin,PredatorFemale_Atrak,PredatorFemale_Perc,PredatorFemale_Sila\n");
+        File.WriteAllText(filePath, "Time;Herbivore_Male;Herbivore_Female;Predator_Male;Predator_Female;Deaths;HerbivoreDeaths;PredatorDeaths;Births;PredatorKills;TreesEaten;TreesSpawned;MaxGeneration;" +
+            "HerbivoreMale_Tezyzna;HerbivoreMale_Poped;HerbivoreMale_Zwin;HerbivoreMale_Atrak;HerbivoreMale_Perc;HerbivoreMale_Sila;" +
+            "HerbivoreFemale_Tezyzna;HerbivoreFemale_Poped;HerbivoreFemale_Zwin;HerbivoreFemale_Atrak;HerbivoreFemale_Perc;HerbivoreFemale_Sila;" +
+            "PredatorMale_Tezyzna;PredatorMale_Poped;PredatorMale_Zwin;PredatorMale_Atrak;PredatorMale_Perc;PredatorMale_Sila;" +
+            "PredatorFemale_Tezyzna;PredatorFemale_Poped;PredatorFemale_Zwin;PredatorFemale_Atrak;PredatorFemale_Perc;PredatorFemale_Sila\n");
 
         Human.OnDeath += OnHumanDeath;
         ReproduceState.OnBirth += OnHumanBirth;
@@ -38,12 +41,13 @@ public class SimulationStatsLogger : MonoBehaviour
     void Update()
     {
         timer += Time.deltaTime;
-        if (timer >= logInterval)
-        {
+        if (timer >= logInterval) {
             timer = 0f;
             LogStats();
-            deaths = 0;
-            births = 0;
+            //deaths = 0;
+            //births = 0;
+            //herbivoreDeaths = 0;
+            //predatorDeaths = 0;
         }
     }
 
@@ -96,13 +100,15 @@ public class SimulationStatsLogger : MonoBehaviour
             if (predatorFemale > 0) predatorFemaleGenes[i] /= predatorFemale;
         }
 
-        string line = $"{Time.time:F2},{herbivoreMale},{herbivoreFemale},{predatorMale},{predatorFemale},{deaths},{births},{predatorKills},{treesEaten},{treesSpawned},{maxGeneration}";
+        string line = string.Format(CultureInfo.InvariantCulture,
+            "{0:F2};{1};{2};{3};{4};{5};{6};{7};{8};{9};{10};{11};{12}",
+        Time.time, herbivoreMale, herbivoreFemale, predatorMale, predatorFemale,
+        deaths, herbivoreDeaths, predatorDeaths, births, predatorKills, treesEaten, treesSpawned, maxGeneration);
 
-        // Dodaj œrednie geny do linii
-        for (int i = 0; i < 6; i++) line += $",{herbivoreMaleGenes[i]:F3}";
-        for (int i = 0; i < 6; i++) line += $",{herbivoreFemaleGenes[i]:F3}";
-        for (int i = 0; i < 6; i++) line += $",{predatorMaleGenes[i]:F3}";
-        for (int i = 0; i < 6; i++) line += $",{predatorFemaleGenes[i]:F3}";
+        for (int i = 0; i < 6; i++) line += $";{herbivoreMaleGenes[i].ToString("F3", CultureInfo.InvariantCulture)}";
+        for (int i = 0; i < 6; i++) line += $";{herbivoreFemaleGenes[i].ToString("F3", CultureInfo.InvariantCulture)}";
+        for (int i = 0; i < 6; i++) line += $";{predatorMaleGenes[i].ToString("F3", CultureInfo.InvariantCulture)}";
+        for (int i = 0; i < 6; i++) line += $";{predatorFemaleGenes[i].ToString("F3", CultureInfo.InvariantCulture)}";
 
         line += "\n";
         File.AppendAllText(filePath, line);
@@ -116,9 +122,12 @@ public class SimulationStatsLogger : MonoBehaviour
         predatorKills++;
     }
 
-    private void OnHumanDeath()
-    {
+    private void OnHumanDeath(Human human) {
         deaths++;
+        if (human.predator)
+            predatorDeaths++;
+        else
+            herbivoreDeaths++;
     }
 
     private void OnHumanBirth()

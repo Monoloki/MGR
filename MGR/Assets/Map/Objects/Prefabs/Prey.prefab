@@ -575,6 +575,7 @@ MonoBehaviour:
   predator: 0
   gender: 0
   stausText: {fileID: 2570965162112663255}
+  generation: 0
   meat: {fileID: 3735629160151771796, guid: a8945f2da959576449867a7cf8de5352, type: 3}
   healthBar: {fileID: 6052387310450174840}
   genome: {fileID: 4774308239339497985}
