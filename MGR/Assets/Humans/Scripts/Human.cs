@@ -88,6 +88,7 @@ public class Human : MonoBehaviour {
         if (reproduceCooldownTimer > 0f)
             reproduceCooldownTimer -= Time.deltaTime;
 
+
         if (currentState is PatrolState && IsReadyToReproduce()) {
             Human partner = FindReproducePartner();
             if (partner != null) {
@@ -102,6 +103,9 @@ public class Human : MonoBehaviour {
     private Human FindReproducePartner() {
         Physics2D.queriesHitTriggers = true;
         Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, range);
+
+       
+
         foreach (Collider2D col in colliders) {
             Human other = col.GetComponent<Human>();
             if (other != null &&

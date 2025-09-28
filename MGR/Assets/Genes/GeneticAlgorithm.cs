@@ -3,12 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public static class GeneticAlgorithm {
+
+    public static SimulationStatsLogger Instance { get; private set; }
+
     // --- Parametry mutacji ---
     public static float mutationChance = 0.3f;  // Prawdopodobieñstwo, ¿e dziecko w ogóle zostanie zmutowane
     public static float perGeneModeShare = 0.7f;  // Szansa na tryb "per gen" (reszta = jeden gen)
     public static float smallSigma = 0.05f; // si³a ma³ej mutacji gaussowskiej
     public static float bigJumpShare = 0.2f;  // udzia³ du¿ych skoków wœród mutacji
 
+    
     public static float[] Crossover(float[] parentA, float[] parentB) {
         if (parentA == null || parentB == null)
             throw new System.ArgumentNullException();
@@ -26,19 +30,27 @@ public static class GeneticAlgorithm {
         // --- Mutacja ---
         if (Random.value < mutationChance) {
             bool perGeneMode = Random.value < perGeneModeShare;
+            bool bigJumpOccurred = false;
 
             if (perGeneMode) {
                 // Mutacja per gen (ka¿dy gen osobno)
                 for (int i = 0; i < length; i++) {
                     child[i] = Mathf.Clamp01(MutateHybrid(child[i]));
                 }
+                bigJumpOccurred = false;
             }
             else {
                 // Mutacja tylko jednego losowego genu
                 int idx = Random.Range(0, length);
                 child[idx] = Mathf.Clamp01(MutateHybrid(child[idx]));
+                bigJumpOccurred = true;
             }
+
+
+            if (SimulationStatsLogger.Instance != null)
+                SimulationStatsLogger.Instance.RegisterMutation(perGeneMode, bigJumpOccurred);
         }
+
 
         return child;
     }

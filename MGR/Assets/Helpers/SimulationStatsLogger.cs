@@ -15,6 +15,11 @@ public class SimulationStatsLogger : MonoBehaviour
     private int treesSpawned = 0;
     private int herbivoreDeaths = 0;
     private int predatorDeaths = 0;
+    private int mutationCount = 0;
+    private int perGeneMutationCount = 0;
+    private int singleGeneMutationCount = 0;
+    private int bigJumpMutationCount = 0;
+    private int smallMutationCount = 0;
 
 
     void Start() {
@@ -28,14 +33,32 @@ public class SimulationStatsLogger : MonoBehaviour
         }
         Debug.Log(filePath);
         File.WriteAllText(filePath, "Time;Herbivore_Male;Herbivore_Female;Predator_Male;Predator_Female;Deaths;HerbivoreDeaths;PredatorDeaths;Births;PredatorKills;TreesEaten;TreesSpawned;MaxGeneration;" +
-            "HerbivoreMale_Tezyzna;HerbivoreMale_Poped;HerbivoreMale_Zwin;HerbivoreMale_Atrak;HerbivoreMale_Perc;HerbivoreMale_Sila;" +
-            "HerbivoreFemale_Tezyzna;HerbivoreFemale_Poped;HerbivoreFemale_Zwin;HerbivoreFemale_Atrak;HerbivoreFemale_Perc;HerbivoreFemale_Sila;" +
-            "PredatorMale_Tezyzna;PredatorMale_Poped;PredatorMale_Zwin;PredatorMale_Atrak;PredatorMale_Perc;PredatorMale_Sila;" +
-            "PredatorFemale_Tezyzna;PredatorFemale_Poped;PredatorFemale_Zwin;PredatorFemale_Atrak;PredatorFemale_Perc;PredatorFemale_Sila\n");
+    "MutationCount;PerGeneMutationCount;SingleGeneMutationCount;BigJumpMutationCount;SmallMutationCount;" +
+    "HerbivoreMale_Tezyzna;HerbivoreMale_Poped;HerbivoreMale_Zwin;HerbivoreMale_Atrak;HerbivoreMale_Perc;HerbivoreMale_Sila;" +
+    "HerbivoreFemale_Tezyzna;HerbivoreFemale_Poped;HerbivoreFemale_Zwin;HerbivoreFemale_Atrak;HerbivoreFemale_Perc;HerbivoreFemale_Sila;" +
+    "PredatorMale_Tezyzna;PredatorMale_Poped;PredatorMale_Zwin;PredatorMale_Atrak;PredatorMale_Perc;PredatorMale_Sila;" +
+    "PredatorFemale_Tezyzna;PredatorFemale_Poped;PredatorFemale_Zwin;PredatorFemale_Atrak;PredatorFemale_Perc;PredatorFemale_Sila\n");
 
         Human.OnDeath += OnHumanDeath;
         ReproduceState.OnBirth += OnHumanBirth;
         PredatorFoodState.OnPredatorKill += OnPredatorKill;
+    }
+
+    public static SimulationStatsLogger Instance { get; private set; }
+
+    void Awake() {
+        Instance = this;
+    }
+    public void RegisterMutation(bool perGene, bool bigJump) {
+        mutationCount++;
+        if (perGene)
+            perGeneMutationCount++;
+        else
+            singleGeneMutationCount++;
+        if (bigJump)
+            bigJumpMutationCount++;
+        else
+            smallMutationCount++;
     }
 
     void Update()
@@ -101,9 +124,10 @@ public class SimulationStatsLogger : MonoBehaviour
         }
 
         string line = string.Format(CultureInfo.InvariantCulture,
-            "{0:F2};{1};{2};{3};{4};{5};{6};{7};{8};{9};{10};{11};{12}",
+        "{0:F2};{1};{2};{3};{4};{5};{6};{7};{8};{9};{10};{11};{12};{13};{14};{15};{16}",
         Time.time, herbivoreMale, herbivoreFemale, predatorMale, predatorFemale,
-        deaths, herbivoreDeaths, predatorDeaths, births, predatorKills, treesEaten, treesSpawned, maxGeneration);
+        deaths, herbivoreDeaths, predatorDeaths, births, predatorKills, treesEaten, treesSpawned, maxGeneration,
+        mutationCount, perGeneMutationCount, singleGeneMutationCount, bigJumpMutationCount, smallMutationCount);
 
         for (int i = 0; i < 6; i++) line += $";{herbivoreMaleGenes[i].ToString("F3", CultureInfo.InvariantCulture)}";
         for (int i = 0; i < 6; i++) line += $";{herbivoreFemaleGenes[i].ToString("F3", CultureInfo.InvariantCulture)}";
@@ -113,9 +137,6 @@ public class SimulationStatsLogger : MonoBehaviour
         line += "\n";
         File.AppendAllText(filePath, line);
         Debug.Log("Logged stats");
-        predatorKills = 0;
-        treesEaten = 0;
-        treesSpawned = 0;
     }
 
     private void OnPredatorKill() {

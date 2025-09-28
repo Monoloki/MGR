@@ -253,6 +253,7 @@ MonoBehaviour:
   predator: 1
   gender: 0
   stausText: {fileID: 1003408165297151813}
+  generation: 0
   meat: {fileID: 3735629160151771796, guid: a8945f2da959576449867a7cf8de5352, type: 3}
   healthBar: {fileID: 7640657108061643930}
   genome: {fileID: 2985630231563419965}
@@ -333,8 +334,8 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6512584918613547554}
-  m_BodyType: 0
-  m_Simulated: 0
+  m_BodyType: 2
+  m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
   m_Mass: 1
